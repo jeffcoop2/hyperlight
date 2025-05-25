@@ -219,7 +219,7 @@ impl MemoryRegionVecBuilder {
     }
 
     /// Consumes the builder and returns a vec of memory regions. The regions are guaranteed to be a contiguous chunk
-    /// of memory, in other words, there will be any memory gaps between them.
+    /// of memory; in other words, there will be no memory gaps between them.
     pub(crate) fn build(self) -> Vec<MemoryRegion> {
         self.regions
     }
