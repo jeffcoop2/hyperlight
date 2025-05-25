@@ -126,7 +126,17 @@ pub fn debug_print(msg: &str) {
 /// This function requires memory to be setup to be used. In particular, the
 /// existence of the input and output memory regions.
 pub fn print_output_with_host_print(function_call: &FunctionCall) -> Result<Vec<u8>> {
-    if let ParameterValue::String(message) = function_call.parameters.clone().unwrap()[0].clone() {
+    let params = function_call
+        .parameters
+        .as_ref()
+        .ok_or_else(|| {
+            HyperlightGuestError::new(
+                ErrorCode::GuestError,
+                "Wrong Parameters passed to print_output_with_host_print".to_string(),
+            )
+        })?;
+
+    if let Some(ParameterValue::String(message)) = params.get(0) {
         let res = call_host_function::<i32>(
             "HostPrint",
             Some(Vec::from(&[ParameterValue::String(message.to_string())])),
@@ -139,5 +149,18 @@ pub fn print_output_with_host_print(function_call: &FunctionCall) -> Result<Vec<
             ErrorCode::GuestError,
             "Wrong Parameters passed to print_output_with_host_print".to_string(),
         ))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use hyperlight_common::flatbuffer_wrappers::function_call::{FunctionCall, FunctionCallType};
+
+    #[test]
+    fn print_output_with_host_print_invalid_params() {
+        let fc = FunctionCall::new("PrintOutput".to_string(), None, FunctionCallType::Guest, ReturnType::Int);
+        let res = print_output_with_host_print(&fc);
+        assert!(res.is_err());
     }
 }
